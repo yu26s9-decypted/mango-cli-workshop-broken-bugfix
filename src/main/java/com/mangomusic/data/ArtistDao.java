@@ -24,8 +24,8 @@ public class ArtistDao {
                 "WHERE name LIKE ? " +
                 "ORDER BY name";
 
-        try {
-            Connection connection = dataManager.getConnection();
+        try(Connection connection = dataManager.getConnection()) {
+
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
 
