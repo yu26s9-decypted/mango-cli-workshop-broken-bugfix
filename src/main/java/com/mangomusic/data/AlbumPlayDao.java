@@ -29,9 +29,9 @@ public class AlbumPlayDao {
                 "ORDER BY ap.played_at DESC " +
                 "LIMIT ?";
 
-        try {
-            Connection connection = dataManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query);
+        try( Connection connection = dataManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
 
             statement.setInt(1, userId);
             statement.setInt(2, limit);
@@ -50,7 +50,6 @@ public class AlbumPlayDao {
                 }
             }
 
-            statement.close();
 
         } catch (SQLException e) {
             System.err.println("Error getting user plays: " + e.getMessage());
