@@ -20,11 +20,13 @@ public class AlbumDao {
 
     public List<Album> getAlbumsByArtist(int artistId) {
         List<Album> albums = new ArrayList<>();
-        String query = "SELECT al.album_id, al.artist_id, al.title, al.release_year, ar.name as artist_name " +
-                "FROM albums al " +
-                "JOIN artists ar ON al.artist_id = ar.artist_id " +
-                "WHERE al.artist_id = ? " +
-                "ORDER BY al.release_year DESC";
+        String query = """
+                SELECT al.album_id, al.artist_id, al.title, al.release_year, name AS "artist_name"
+                FROM albums al
+                JOIN artists ar ON al.artist_id = ar.artist_id
+                WHERE al.artist_id = ?
+                ORDER BY release_year DESC;
+                """;
 
         try {
             Connection connection = dataManager.getConnection();
@@ -39,7 +41,7 @@ public class AlbumDao {
                         int artId = results.getInt("artist_id");
                         String title = results.getString("title");
                         int releaseYear = results.getInt("release_year");
-                        String artistName = results.getString("artist");
+                        String artistName = results.getString("artist_name");
 
                         albums.add(new Album(albumId, artId, title, releaseYear, artistName));
                     }
