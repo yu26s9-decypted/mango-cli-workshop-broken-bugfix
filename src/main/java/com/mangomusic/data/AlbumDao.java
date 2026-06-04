@@ -58,19 +58,22 @@ public class AlbumDao {
 
     public List<Album> getAlbumsByGenre(String genre) {
         List<Album> albums = new ArrayList<>();
-        String query = "SELECT al.album_id, al.artist_id, al.title, al.release_year, ar.name as artist_name " +
-                "FROM albums al " +
-                "JOIN artists ar ON al.artist_id = ar.artist_id " +
-                "WHERE ar.primary_genre = '" + genre + "' " +
-                "ORDER BY al.title";
+        String query = """
+                SELECT al.album_id, al.artist_id, al.title, al.release_year, ar.name as artist_name
+                FROM albums al
+                JOIN artists ar ON al.artist_id = ar.artist_id
+                WHERE ar.primary_genre = ?
+                ORDER BY al.title;""";
 
         try {
             Connection connection = dataManager.getConnection();
 
-            try (Statement statement = connection.createStatement();
-                 ResultSet results = statement.executeQuery(query)) {
+            try (PreparedStatement statement = connection.prepareStatement(query)){
+                 statement.setString(1, genre);
+                 try(ResultSet results = statement.executeQuery()) {
 
-                while (results.next()) {
+
+                    while (results.next()) {
                     int albumId = results.getInt("album_id");
                     int artistId = results.getInt("artist_id");
                     String title = results.getString("title");
@@ -78,6 +81,7 @@ public class AlbumDao {
                     String artistName = results.getString("artist_name");
 
                     albums.add(new Album(albumId, artistId, title, releaseYear, artistName));
+                }
                 }
             }
 
