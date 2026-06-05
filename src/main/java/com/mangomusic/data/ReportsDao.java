@@ -493,29 +493,89 @@ public class ReportsDao {
     public List<ReportResult> getMostPlayedAlbumsByGenre(){
         List<ReportResult> results = new ArrayList<>();
         String mostPlayedAlbumsByGenreQuery = """
-               SELECT album_counts.primary_genre, MAX(play_amount) as "play_amount", MAX(title) AS "album_title"\s
-               FROM(SELECT albums.album_id, albums.artist_id, albums.title, primary_genre, COUNT(*) as "play_amount" FROM albums
-               INNER JOIN artists ON artists.artist_id = albums.artist_id
-               INNER JOIN album_plays ap ON ap.album_id = albums.album_id
-               GROUP BY  albums.album_id, albums.artist_id, albums.title, primary_genre)\s
-               AS album_counts
-               INNER JOIN (SELECT primary_genre, MAX(play_amount) AS 'max_plays'
-               FROM (SELECT albums.album_id, albums.artist_id, albums.title, primary_genre, COUNT(*) as "play_amount" FROM albums
-               INNER JOIN artists ON artists.artist_id = albums.artist_id
-               INNER JOIN album_plays ap ON ap.album_id = albums.album_id
-               GROUP BY  albums.album_id, albums.artist_id, albums.title, primary_genre) AS genre_max
-               GROUP BY primary_genre) AS genre_max
-               ON album_counts.play_amount = genre_max.max_plays AND album_counts.primary_genre = genre_max.primary_genre
-               GROUP BY primary_genre""";
+              
+                SELECT
+                  ranked.genre,
+                  ranked.album_title,
+                  ranked.artist_name,
+                  ranked.play_count,
+                  ranked.genre_rank
+              FROM (
+                  SELECT
+                      ac.primary_genre AS genre,
+                      ac.title AS album_title,
+                      ac.name AS artist_name,
+                      ac.play_amount AS play_count,
+              
+                      (
+                          SELECT COUNT(*) + 1
+                          FROM (
+                              SELECT
+                                  a2.album_id,
+                                  ar2.primary_genre,
+                                  COUNT(*) AS play_amount
+                              FROM albums a2
+                              JOIN artists ar2
+                                  ON ar2.artist_id = a2.artist_id
+                              JOIN album_plays ap2
+                                  ON ap2.album_id = a2.album_id
+                              GROUP BY
+                                  a2.album_id,
+                                  ar2.primary_genre
+                          ) genre_albums
+                          WHERE genre_albums.primary_genre = ac.primary_genre
+                            AND genre_albums.play_amount > ac.play_amount
+                      ) AS genre_rank
+              
+                  FROM (
+                      SELECT
+                          a.album_id,
+                          a.title,
+                          ar.primary_genre,
+                          ar.name,
+                          COUNT(*) AS play_amount
+                      FROM albums a
+                      JOIN artists ar
+                          ON ar.artist_id = a.artist_id
+                      JOIN album_plays ap
+                          ON ap.album_id = a.album_id
+                      GROUP BY
+                          a.album_id,
+                          a.title,
+                          ar.primary_genre,
+                          ar.name
+                  ) ac
+              ) ranked
+              WHERE ranked.genre_rank <= 5
+                AND ranked.genre IN (
+                    SELECT primary_genre
+                    FROM (
+                        SELECT
+                            ar.primary_genre,
+                            COUNT(DISTINCT a.album_id) AS album_count
+                        FROM albums a
+                        JOIN artists ar
+                            ON ar.artist_id = a.artist_id
+                        JOIN album_plays ap
+                            ON ap.album_id = a.album_id
+                        GROUP BY ar.primary_genre
+                    ) g
+                    WHERE g.album_count >= 5
+                )
+              ORDER BY
+                  ranked.genre,
+                  ranked.play_count DESC;""";
 
         try( Connection connection = dataManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(mostPlayedAlbumsByGenreQuery)) {
                 try(ResultSet rs = statement.executeQuery()){
                     while (rs.next()){
                         ReportResult result = new ReportResult();
-                        result.addColumn("primary_genre", rs.getString("primary_genre"));
-                        result.addColumn("play_amount", rs.getInt("play_amount"));
+                        result.addColumn("genre", rs.getString("genre"));
                         result.addColumn("album_title", rs.getString("album_title"));
+                        result.addColumn("artist_name", rs.getString("artist_name"));
+                        result.addColumn("play_count", rs.getInt("play_count"));
+                        result.addColumn("genre_rank", rs.getInt("genre_rank"));
                         results.add(result);
                     }
                 }

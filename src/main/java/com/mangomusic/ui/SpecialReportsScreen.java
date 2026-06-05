@@ -81,30 +81,36 @@ public class SpecialReportsScreen {
 
     private void showMostPlayedGenreByAlbum() {
         InputValidator.clearScreen();
-        ConsoleColors.printSection("Most Played Album By Genre");
+        ConsoleColors.printSection("Most Played Albums By Genre");
+
         List<ReportResult> results = reportsDao.getMostPlayedAlbumsByGenre();
 
-        if(results.isEmpty()){
+        if (results.isEmpty()) {
             ConsoleColors.printSection("No data.");
         } else {
-            System.out.printf("%-20s %-30s %10s%n",
-                    "Primary Genre", "Play Time", "Album Title");
-            System.out.println("-".repeat(125));
+            System.out.printf("%-15s %-30s %-25s %12s %5s%n",
+                    "Genre", "Album Title", "Artist Name", "Play Count", "Rank");
+
+            System.out.println("-".repeat(100));
 
             int displayCount = Math.min(results.size(), 30);
-            for(int i = 0; i < displayCount; i++){
+
+            for (int i = 0; i < displayCount; i++) {
                 ReportResult result = results.get(i);
-                System.out.printf("%-20s %-30s %10s%n",
-                    result.getString("primary_genre"),
-                    result.getInt("play_amount"),
-                    result.getString("album_title"));
+
+                System.out.printf("%-15s %-30s %-25s %12d %5d%n",
+                        result.getString("genre"),
+                        result.getString("album_title"),
+                        result.getString("artist_name"),
+                        result.getInt("play_count"),
+                        result.getInt("genre_rank"));
             }
 
             if (results.size() > 30) {
-                System.out.println("\n... and " + (results.size() - 30) + " more users at risk");
+                System.out.println("\n... and " + (results.size() - 30) + " more records");
             }
-
         }
+
         InputValidator.pressEnterToContinue();
     }
 
