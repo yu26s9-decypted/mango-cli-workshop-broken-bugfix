@@ -527,6 +527,37 @@ public class ReportsDao {
     }
 
     /**
+     * Report: MangoMusic - Diversity Report
+     */
+
+    public List<ReportResult> getDiversityReport(){
+        List<ReportResult> results = new ArrayList<>();
+        String diversityReportQuery = """
+              SELECT users.country,\s
+              COUNT(users.country) AS "user_count",\s
+              ROUND(COUNT(users.country) * 100.0 / (SELECT COUNT(*) FROM users), 2) AS percentage
+              FROM users
+              GROUP BY country""";
+
+        try( Connection connection = dataManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(diversityReportQuery)) {
+            try(ResultSet rs = statement.executeQuery()){
+                while (rs.next()){
+                    ReportResult result = new ReportResult();
+                    result.addColumn("country", rs.getString("country"));
+                    result.addColumn("user_count", rs.getInt("user_count"));
+                    result.addColumn("percentage", rs.getString("percentage"));
+                    results.add(result);
+                }
+            }
+
+        } catch (Exception e){
+            System.err.println("Error with getting most played album by genre: " + e.getMessage());
+        }
+        return results;
+    }
+
+    /**
      * Report: MangoMusic Mapped - Personalized Year in Review
      */
     public ReportResult getMangoMusicMapped(int userId) {

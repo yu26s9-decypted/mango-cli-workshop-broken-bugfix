@@ -34,7 +34,7 @@ public class SpecialReportsScreen {
                     break;
                 case 3:
                     //@TODO - Create report
-//                    showUserDiversityScore();
+                    showUserDiversityScore();
                     break;
                 case 4:
                     //@TODO - Create report
@@ -45,6 +45,37 @@ public class SpecialReportsScreen {
                     break;
             }
         }
+    }
+
+    private void showUserDiversityScore() {
+        InputValidator.clearScreen();
+        ConsoleColors.printSection("Most Played Album By Genre");
+        List<ReportResult> results = reportsDao.getDiversityReport();
+
+        if(results.isEmpty()){
+            ConsoleColors.printSection("No data.");
+        } else {
+            System.out.printf("%-20s %-30s %10s%n",
+                    "Country", "User", "Percentage of Total User");
+            System.out.println("-".repeat(125));
+
+            int displayCount = Math.min(results.size(), 30);
+            for(int i = 0; i < displayCount; i++){
+                ReportResult result = results.get(i);
+                String percentageStr = result.getString("percentage");
+                double parsePercentage = Double.parseDouble(percentageStr);
+                System.out.printf("%-20s %-30s %10.2f%%%n",
+                        result.getString("country"),
+                        result.getInt("user_count"), parsePercentage);
+
+            }
+
+            if (results.size() > 30) {
+                System.out.println("\n... and " + (results.size() - 30) + " more users at risk");
+            }
+
+        }
+        InputValidator.pressEnterToContinue();
     }
 
     private void showMostPlayedGenreByAlbum() {
