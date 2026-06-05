@@ -547,7 +547,40 @@ public class ReportsDao {
                     ReportResult result = new ReportResult();
                     result.addColumn("country", rs.getString("country"));
                     result.addColumn("user_count", rs.getInt("user_count"));
-                    result.addColumn("percentage", rs.getString("percentage"));
+                    result.addColumn("percentage", rs.getDouble("percentage"));
+                    results.add(result);
+                }
+            }
+
+        } catch (Exception e){
+            System.err.println("Error with getting most played album by genre: " + e.getMessage());
+        }
+        return results;
+    }
+
+
+    /**
+     * Get Peak Listening Hours Report
+     */
+
+    public List<ReportResult> getPeakListeningHoursReport(){
+        List<ReportResult> results = new ArrayList<>();
+        String peakListeningHourQuery = """
+               SELECT EXTRACT(HOUR FROM played_at)
+               AS hour, COUNT(*) as play_count, 
+               ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM album_plays) ,4) AS percentage
+               FROM album_plays
+               GROUP BY hour
+               ORDER BY play_count DESC;""";
+
+        try( Connection connection = dataManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(peakListeningHourQuery)) {
+            try(ResultSet rs = statement.executeQuery()){
+                while (rs.next()){
+                    ReportResult result = new ReportResult();
+                    result.addColumn("hour", rs.getString("hour"));
+                    result.addColumn("play_count", rs.getInt("play_count"));
+                    result.addColumn("percentage", rs.getDouble("percentage"));
                     results.add(result);
                 }
             }

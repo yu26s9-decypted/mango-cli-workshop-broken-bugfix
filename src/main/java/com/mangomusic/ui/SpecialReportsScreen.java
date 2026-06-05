@@ -38,7 +38,7 @@ public class SpecialReportsScreen {
                     break;
                 case 4:
                     //@TODO - Create report
-//                    showPeakListeningHours();
+                    showPeakListeningHours();
                     break;
                 case 0:
                     running = false;
@@ -47,26 +47,27 @@ public class SpecialReportsScreen {
         }
     }
 
+
+
     private void showUserDiversityScore() {
         InputValidator.clearScreen();
-        ConsoleColors.printSection("Most Played Album By Genre");
+        ConsoleColors.printSection("User Demographic Diversity Report");
         List<ReportResult> results = reportsDao.getDiversityReport();
 
         if(results.isEmpty()){
             ConsoleColors.printSection("No data.");
         } else {
             System.out.printf("%-20s %-30s %10s%n",
-                    "Country", "User", "Percentage of Total User");
+                    "Hour", "Play Count", "% of Total Plays");
             System.out.println("-".repeat(125));
 
             int displayCount = Math.min(results.size(), 30);
             for(int i = 0; i < displayCount; i++){
                 ReportResult result = results.get(i);
-                String percentageStr = result.getString("percentage");
-                double parsePercentage = Double.parseDouble(percentageStr);
+                double percentage = result.getDouble("percentage");
                 System.out.printf("%-20s %-30s %10.2f%%%n",
                         result.getString("country"),
-                        result.getInt("user_count"), parsePercentage);
+                        result.getInt("user_count"), percentage);
 
             }
 
@@ -97,6 +98,35 @@ public class SpecialReportsScreen {
                     result.getString("primary_genre"),
                     result.getInt("play_amount"),
                     result.getString("album_title"));
+            }
+
+            if (results.size() > 30) {
+                System.out.println("\n... and " + (results.size() - 30) + " more users at risk");
+            }
+
+        }
+        InputValidator.pressEnterToContinue();
+    }
+
+    private void showPeakListeningHours() {
+        InputValidator.clearScreen();
+        ConsoleColors.printSection("Peak Listening Hours Report");
+        List<ReportResult> results = reportsDao.getPeakListeningHoursReport();
+
+        if(results.isEmpty()){
+            ConsoleColors.printSection("No data.");
+        } else {
+            System.out.printf("%-20s %-30s %10s%n",
+                    "Top Hours", "Listening Count", "Load Percentage of Total");
+            System.out.println("-".repeat(125));
+
+            int displayCount = Math.min(results.size(), 30);
+            for(int i = 0; i < displayCount; i++){
+                ReportResult result = results.get(i);
+                System.out.printf("%-20s %-30s %10.2f%%%n",
+                        result.getString("hour"),
+                        result.getInt("play_count"),
+                        result.getDouble("percentage"));
             }
 
             if (results.size() > 30) {
