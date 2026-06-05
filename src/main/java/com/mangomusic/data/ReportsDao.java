@@ -537,7 +537,8 @@ public class ReportsDao {
               COUNT(users.country) AS "user_count",\s
               ROUND(COUNT(users.country) * 100.0 / (SELECT COUNT(*) FROM users), 2) AS percentage
               FROM users
-              GROUP BY country""";
+              GROUP BY country
+              ORDER BY user_count DESC;""";
 
         try( Connection connection = dataManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(diversityReportQuery)) {
