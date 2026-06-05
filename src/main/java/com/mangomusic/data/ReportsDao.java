@@ -487,6 +487,45 @@ public class ReportsDao {
         return results;
     }
 
+
+
+    // Get most played album by genre
+    public List<ReportResult> getMostPlayedAlbumsByGenre(){
+        List<ReportResult> results = new ArrayList<>();
+        String mostPlayedAlbumsByGenreQuery = """
+               SELECT album_counts.primary_genre, MAX(play_amount) as "play_amount", MAX(title) AS "album_title"\s
+               FROM(SELECT albums.album_id, albums.artist_id, albums.title, primary_genre, COUNT(*) as "play_amount" FROM albums
+               INNER JOIN artists ON artists.artist_id = albums.artist_id
+               INNER JOIN album_plays ap ON ap.album_id = albums.album_id
+               GROUP BY  albums.album_id, albums.artist_id, albums.title, primary_genre)\s
+               AS album_counts
+               INNER JOIN (SELECT primary_genre, MAX(play_amount) AS 'max_plays'
+               FROM (SELECT albums.album_id, albums.artist_id, albums.title, primary_genre, COUNT(*) as "play_amount" FROM albums
+               INNER JOIN artists ON artists.artist_id = albums.artist_id
+               INNER JOIN album_plays ap ON ap.album_id = albums.album_id
+               GROUP BY  albums.album_id, albums.artist_id, albums.title, primary_genre) AS genre_max
+               GROUP BY primary_genre) AS genre_max
+               ON album_counts.play_amount = genre_max.max_plays AND album_counts.primary_genre = genre_max.primary_genre
+               GROUP BY primary_genre""";
+
+        try( Connection connection = dataManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(mostPlayedAlbumsByGenreQuery)) {
+                try(ResultSet rs = statement.executeQuery()){
+                    while (rs.next()){
+                        ReportResult result = new ReportResult();
+                        result.addColumn("primary_genre", rs.getString("primary_genre"));
+                        result.addColumn("play_amount", rs.getInt("play_amount"));
+                        result.addColumn("album_title", rs.getString("album_title"));
+                        results.add(result);
+                    }
+                }
+
+        } catch (Exception e){
+            System.err.println("Error with getting most played album by genre: " + e.getMessage());
+        }
+        return results;
+    }
+
     /**
      * Report: MangoMusic Mapped - Personalized Year in Review
      */
@@ -588,6 +627,7 @@ public class ReportsDao {
                     }
                 }
             }
+
 
             // Calculate listener personality based on stats
             int totalPlays = mapped.getInt("total_plays");

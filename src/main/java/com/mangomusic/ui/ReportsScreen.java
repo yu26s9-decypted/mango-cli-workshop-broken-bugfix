@@ -72,6 +72,7 @@ public class ReportsScreen {
         }
     }
 
+
     /**
      * Displays the reports menu options
      */
@@ -435,6 +436,7 @@ public class ReportsScreen {
 
         InputValidator.pressEnterToContinue();
     }
+
 
     /**
      * Helper method to truncate strings for display

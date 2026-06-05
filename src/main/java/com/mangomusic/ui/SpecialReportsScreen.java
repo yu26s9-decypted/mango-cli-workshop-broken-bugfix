@@ -5,6 +5,8 @@ import com.mangomusic.models.ReportResult;
 import com.mangomusic.util.ConsoleColors;
 import com.mangomusic.util.InputValidator;
 
+import java.util.List;
+
 public class SpecialReportsScreen {
 
     private final ReportsDao reportsDao;
@@ -20,15 +22,15 @@ public class SpecialReportsScreen {
             InputValidator.clearScreen();
             displayMenu();
 
-            int choice = InputValidator.getIntInRange("Select an option: ", 0, 1);
+            int choice = InputValidator.getIntInRange("Select an option: ", 1, 4);
 
             switch (choice) {
                 case 1:
                     showMangoMusicMapped();
                     break;
                 case 2:
-                    //@TODO - Create report
-//                    showMostPlayedAlbumsByGenre();
+                    showMostPlayedGenreByAlbum();
+
                     break;
                 case 3:
                     //@TODO - Create report
@@ -43,6 +45,35 @@ public class SpecialReportsScreen {
                     break;
             }
         }
+    }
+
+    private void showMostPlayedGenreByAlbum() {
+        InputValidator.clearScreen();
+        ConsoleColors.printSection("Most Played Album By Genre");
+        List<ReportResult> results = reportsDao.getMostPlayedAlbumsByGenre();
+
+        if(results.isEmpty()){
+            ConsoleColors.printSection("No data.");
+        } else {
+            System.out.printf("%-20s %-30s %10s%n",
+                    "Primary Genre", "Play Time", "Album Title");
+            System.out.println("-".repeat(125));
+
+            int displayCount = Math.min(results.size(), 30);
+            for(int i = 0; i < displayCount; i++){
+                ReportResult result = results.get(i);
+                System.out.printf("%-20s %-30s %10s%n",
+                    result.getString("primary_genre"),
+                    result.getInt("play_amount"),
+                    result.getString("album_title"));
+            }
+
+            if (results.size() > 30) {
+                System.out.println("\n... and " + (results.size() - 30) + " more users at risk");
+            }
+
+        }
+        InputValidator.pressEnterToContinue();
     }
 
     private void displayMenu() {
